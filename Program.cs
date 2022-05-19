@@ -76,7 +76,7 @@ END;";
                 sw.WriteLine(createTableSQL);
                 foreach (var registro in objetoRegistroFromJson.Registros)
                 {
-                    string lineInsertSQL = $@"INSERT INTO DocumentosRpaFromJson(Estabelecimento,CNPJ,DataMovimento,ValorContabil,QuantidadeCuponsCancelados,NumeroEquipamentoSAT,NumeroCFeInicial,NumeroCFeFinal,NumeroLinha) VALUES ('{objetoRegistroFromJson.Estabelecimento}','{objetoRegistroFromJson.CNPJ}','2022-02-01T00:00:00',{registro.ValorContabil.ToString().Replace(",", ".")},{registro.QuantidadeCuponsCancelados},{registro.NumeroEquipamentoSAT},{registro.NumeroCFeInicial.ToString()},{registro.NumeroCFeFinal.ToString()},{registro.NumeroLinha});";
+                    string lineInsertSQL = $@"INSERT INTO {sqlTableName}(Estabelecimento,CNPJ,DataMovimento,ValorContabil,QuantidadeCuponsCancelados,NumeroEquipamentoSAT,NumeroCFeInicial,NumeroCFeFinal,NumeroLinha) VALUES ('{objetoRegistroFromJson.Estabelecimento}','{objetoRegistroFromJson.CNPJ}',{registro.Data.ToString("yyyy-MM-dd")},{registro.ValorContabil.ToString().Replace(",", ".")},{registro.QuantidadeCuponsCancelados},{registro.NumeroEquipamentoSAT},{registro.NumeroCFeInicial.ToString()},{registro.NumeroCFeFinal.ToString()},{registro.NumeroLinha});";
                     sw.WriteLine(lineInsertSQL);
                 }
             }
