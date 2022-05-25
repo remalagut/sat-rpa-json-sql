@@ -29,5 +29,8 @@ namespace SATRpaToJson.Model.SqlOutput
         public decimal ValorTotal { get; set; }
 
         public string ChaveInfCpl { get; set; }
+        public string ChaveCancelado { get; set; }
+        public bool CupomDeCancelamento { get; set; }
+
     }
 }

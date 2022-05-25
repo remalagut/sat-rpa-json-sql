@@ -23,8 +23,8 @@ namespace SATRpaToJson
             var jsonsToCreateInsert = args.Where(x => x.EndsWith(".json") && !x.Contains("xmlcfe"));
             var jsonFromXmlsToCreateInsert = args.Where(x => x.EndsWith(".xmlcfe.json"));
             var xmlsCfeToCreateInsert = args.Where(x => x.EndsWith(".xml")).OrderBy(x => x).ToList();
-            
-            xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\313288\sub-analises\novo luz\XML_SEFAZ\24052022\350220524005894627880.xml" };
+
+            //xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\313288\sub-analises\novo luz\XML_SEFAZ\24052022\350220524005894627880.xml" };
 
             if (args.Length == 0)
             {
@@ -44,7 +44,7 @@ namespace SATRpaToJson
                 Console.WriteLine("8 - Foi adicionada possibilidade de conversao do XML cfe que é baixado do SGR Sat ser convertido em comandos sql, basta converter o arquivo xml que vem da sefaz no site https://jsonformatter.org/xml-formatter com a opçao \"xml to json\" e manter o arquivo com a extensao .xmlcfe.json, inves de apenas json (utilizado pros rpas)");
                 Console.WriteLine("8.1 - faça o join de seus arquivos de lote cfe no site https://www.filesmerge.com/pt/merge-text-files e converta em apenas um json para geração do sql, isso facilitará seu trabalho");
 
-            
+
                 Console.WriteLine("===================================== renanmalagutti.dev@gmail.com ==========================================");
                 Console.ReadKey();
             }
@@ -53,7 +53,7 @@ namespace SATRpaToJson
             {
                 ProcessarConversaoArquivoCsvToJson(arquivoRpa);
             }
-           
+
             foreach (var arquivoJson in jsonsToCreateInsert)
             {
                 CriarInsertSqlFromJson(arquivoJson);
@@ -67,26 +67,37 @@ namespace SATRpaToJson
             foreach (var arquivoXmlEnvCFe in xmlsCfeToCreateInsert)
             {
                 CriarInsertFromXmlCfeSat(arquivoXmlEnvCFe);
-                Console.ReadKey();
             }
+
+            Console.ReadKey();
         }
 
         private static void CriarInsertFromXmlCfeSat(string arquivoXmlCFe)
         {
+            Console.WriteLine("CriarInsertFromXmlCfeSat " + arquivoXmlCFe);
+            var listaDocumentosToGenerateInsert = new List<DocumentoCFe>();
             string formatString = "yyyyMMddHHmmss";
 
-            //var cfeContentFromXml = new XmlParserModel.NewDataSet();
-
             var textXml = File.ReadAllText(arquivoXmlCFe);
-            var xmlDataCFe = textXml.DeserializeXML<XmlParserModel.EnvCFe>();
-
-            //var jsonContentEnvCFe = File.ReadAllText(arquivoXmlCFe);
-
-            var listaDocumentosToGenerateInsert = new List<DocumentoCFe>();
-
-            foreach (var documentoCfe in xmlDataCFe.LoteCFe.CFe)
+            if (textXml.EndsWith("</envCFe>"))
             {
-                Console.WriteLine("CriarInsertFromXmlCfe documento " + documentoCfe.InfCFe.Id);
+                BuildListaDocsInsertCFe(listaDocumentosToGenerateInsert, formatString, textXml);
+            }
+            if (textXml.EndsWith("</cancCFe>"))
+            {
+                BuildListaDocsInsertCFeCanc(listaDocumentosToGenerateInsert, formatString, textXml);
+            }
+            GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
+        }
+
+        private static void BuildListaDocsInsertCFeCanc(List<DocumentoCFe> listaDocumentosToGenerateInsert, string formatString, string textXml)
+        {
+            var xmlDataCFe = textXml.DeserializeXML<XmlParserModel.XmlSharpCFeCancModel.CancCFe>();
+
+            foreach (var documentoCfe in xmlDataCFe.LoteCFeCanc.CFeCanc)
+            {
+                Console.WriteLine("BuildListaDocsInsertCFeCanc documento " + documentoCfe.InfCFe.Id);
+                //documentoCfe.InfCFe.ChCanc
                 var newDocument = new DocumentoCFe()
                 {
                     DocumentoId = Guid.NewGuid(),
@@ -98,11 +109,59 @@ namespace SATRpaToJson
                     //cNF = cfeContentFromXml.c.CNf,
                     EmitenteCNPJ = documentoCfe.InfCFe.Emit.CNPJ,
                     EmitenteNome = documentoCfe.InfCFe.Emit.XNome.ToString(),
-                    ChaveInfCpl = documentoCfe.InfCFe.InfAdic.InfCpl.ToString(),
+                    //ChaveInfCpl = documentoCfe.InfCFe.InfAdic?.InfCpl?.ToString(),
                     NumeroCaixa = documentoCfe.InfCFe.Ide.NumeroCaixa,
-                    ValorTotal = Convert.ToDecimal(documentoCfe.InfCFe.Total.VCFe.Replace(".", ",")),
+                    ValorTotal = Convert.ToDecimal(documentoCfe.InfCFe?.Total?.VCFe.Replace(".", ",") ?? "0"),
                     DataHoraEmissao = DateTime.ParseExact(documentoCfe.InfCFe.Ide.DEmi.ToString() + documentoCfe.InfCFe.Ide.HEmi.ToString().PadLeft(6, '0'), formatString, null),
-                    Itens = new List<DocumentoCFeItem>()
+                    Itens = new List<DocumentoCFeItem>(),
+                    CupomDeCancelamento= true,
+                    ChaveCancelado=documentoCfe.InfCFe.ChCanc
+                };
+
+                //foreach (var itemDocumento in documentoCfe.InfCFe.Det.ToList())
+                //{
+                //    DocumentoCFeItem newItemDocumento = new DocumentoCFeItem()
+                //    {
+                //        NumeroItem = itemDocumento.NItem,
+                //        CFOP = itemDocumento.Prod.CFOP,
+                //        //CodigoBarraMercadoria = itemDocumento.Prod.,
+                //        CodigoCadastroMercadoria = itemDocumento.Prod.CProd.ToString(),
+                //        DescricaoMercadoria = itemDocumento.Prod.XProd,
+                //        NCM = itemDocumento.Prod.NCM,
+                //        ValorItem = Convert.ToDecimal(itemDocumento.Prod.VItem.Replace(".", ",")),
+                //        DocumentoId = newDocument.DocumentoId
+                //    };
+                //    newDocument.Itens.Add(newItemDocumento);
+                //}
+                listaDocumentosToGenerateInsert.Add(newDocument);
+            }
+        }
+
+        private static void BuildListaDocsInsertCFe(List<DocumentoCFe> listaDocumentosToGenerateInsert, string formatString, string textXml)
+        {
+            var xmlDataCFe = textXml.DeserializeXML<XmlParserModel.EnvCFe>();
+
+            foreach (var documentoCfe in xmlDataCFe.LoteCFe.CFe)
+            {
+                Console.WriteLine("BuildListaDocsInsertCFe documento " + documentoCfe.InfCFe.Id);
+
+                var newDocument = new DocumentoCFe()
+                {
+                    DocumentoId = Guid.NewGuid(),
+                    ChaveConsulta = documentoCfe.InfCFe.Id,
+                    NumeroCFe = documentoCfe.InfCFe.Ide.NCFe,
+                    NumeroSerieEquipamentoSat = xmlDataCFe.NserieSAT,
+                    tpAmb = Convert.ToInt64(xmlDataCFe.TpAmb),
+                    IdLote = xmlDataCFe.IdLote,
+                    //cNF = cfeContentFromXml.c.CNf,
+                    EmitenteCNPJ = documentoCfe.InfCFe.Emit.CNPJ,
+                    EmitenteNome = documentoCfe.InfCFe.Emit.XNome.ToString(),
+                    ChaveInfCpl = documentoCfe.InfCFe.InfAdic?.InfCpl?.ToString(),
+                    NumeroCaixa = documentoCfe.InfCFe.Ide.NumeroCaixa,
+                    ValorTotal = Convert.ToDecimal(documentoCfe.InfCFe?.Total?.VCFe.Replace(".", ",") ?? "0"),
+                    DataHoraEmissao = DateTime.ParseExact(documentoCfe.InfCFe.Ide.DEmi.ToString() + documentoCfe.InfCFe.Ide.HEmi.ToString().PadLeft(6, '0'), formatString, null),
+                    Itens = new List<DocumentoCFeItem>(),
+                    CupomDeCancelamento=false
                 };
 
                 foreach (var itemDocumento in documentoCfe.InfCFe.Det.ToList())
@@ -122,10 +181,9 @@ namespace SATRpaToJson
                 }
                 listaDocumentosToGenerateInsert.Add(newDocument);
             }
-            GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
         }
 
-            //GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
+        //GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
         //}
 
         private static void GerarArquivoSqlFromJsonXmlCFe(List<DocumentoCFe> listaDocumentosToGenerateInsert, string arquivoXml)
@@ -147,6 +205,8 @@ IF NOT EXISTS (
     [EmitenteNome]  VARCHAR(MAX),
 	[ValorTotal] DECIMAL(16, 3),
     [ChaveInfCpl] VARCHAR(MAX),
+    [ChaveCFeCancelado] VARCHAR(MAX) DEFAULT NULL,
+	[CupomDeCancelamento] bit default(0)
 );
 
 IF NOT EXISTS (
@@ -165,7 +225,7 @@ IF NOT EXISTS (
 ";
 
             var outputFilename = GetFullFilenameWithNewExtension(arquivoXml, "sql");
-            using(StreamWriter sw = new StreamWriter(outputFilename))
+            using (StreamWriter sw = new StreamWriter(outputFilename))
             {
                 sw.WriteLine(createTablesSql);
 
@@ -218,7 +278,7 @@ IF NOT EXISTS (
            ,'{itemCfe.DescricaoMercadoria}'
            ,'{itemCfe.NCM}'
            ,'{itemCfe.CFOP}'
-           ,{itemCfe.ValorItem.ToString("0.00",CultureInfo.InvariantCulture)}
+           ,{itemCfe.ValorItem.ToString("0.00", CultureInfo.InvariantCulture)}
            ,'{itemCfe.NumeroItem}'
            ,'{itemCfe.DocumentoId}');";
                         sw.WriteLine(sqlInsertItem);
@@ -231,7 +291,7 @@ IF NOT EXISTS (
             Console.WriteLine("Concluída geração de sql " + outputFilename);
         }
 
-        private static void CriarInsertSqlFromJson( string arquivoJson)
+        private static void CriarInsertSqlFromJson(string arquivoJson)
         {
             Console.WriteLine("Iniciando processamento arquivo json para sql: " + arquivoJson);
             var sqlTableName = ConfigurationSettings.AppSettings.Get("SqlTableName");
