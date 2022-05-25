@@ -8,19 +8,22 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Configuration;
+using SATRpaToJson.Model.SqlOutput;
+using System.Globalization;
 
 namespace SATRpaToJson
 {
     class Program
     {
-
-
         static void Main(string[] args)
         {
             var csvsToConvert = args.Where(x => x.EndsWith(".csv"));
-            var jsonsToCreateInsert = args.Where(x => x.EndsWith(".json"));
+            var jsonsToCreateInsert = args.Where(x => x.EndsWith(".json") && !x.Contains("xmlcfe"));
+            var jsonFromXmlsToCreateInsert = args.Where(x => x.EndsWith(".xmlcfe.json"));
 
             //jsonsToCreateInsert = new List<String>() { @"D:\GoogleDrive\META\UtilShare\313288\RPAs\GERAL\JSON\202202-AUTO POSTO B MARGINAL LTDA-RPA - Cupom de Movimento_Fevereiro_2022_24361667000188.xlsx - CDU113_RPA_CFe_SAT.json" };
+            jsonFromXmlsToCreateInsert = new List<string>() { @"C:\transient\jsonCfeFromXml[httpsjsonformatter.orgxml-formatter].json" };
+
             if (args.Length == 0)
             {
                 var linkSefazRPA = @"https://satsp.fazenda.sp.gov.br/COMSAT/Private/ConsultarRelatoriosEscrituracao/ConsultarRelatoriosEscrituracao.aspx";
@@ -35,7 +38,8 @@ namespace SATRpaToJson
                 Console.WriteLine("6 - Na pasta onde estão os arquivos csv, será gerado um arquivo json para cada RPA.");
                 Console.WriteLine("7 - Caso já tenha um json convertido do RPA e queira gerar os comandos SQL para os dados do RPA, basta dropar o json neste mesmo aplicativo, com as seguintes observações:");
                 Console.WriteLine("7.1 - No app.config, insira na chave SqlTableName o nome da tabela que deseja que seja criada com os dados do RPA;");
-                Console.WriteLine("Multiplis csvs e jsons são aceitos em cada execução, basta selecionar todos os arquivos e arrastar em cima do exe deste app. Serão criados arquivos com o mesmo nome na pasta original, com a extensão do arquivo destino (csv > gera json, json > gera sql)");
+                Console.WriteLine("Multiplos csvs e jsons são aceitos em cada execução, basta selecionar todos os arquivos e arrastar em cima do exe deste app. Serão criados arquivos com o mesmo nome na pasta original, com a extensão do arquivo destino (csv > gera json, json > gera sql)");
+                Console.WriteLine("8 - Foi adicionada possibilidade de conversao do XML cfe que é baixado do SGR Sat ser convertido em comandos sql, basta converter o arquivo xml que vem da sefaz no site https://jsonformatter.org/xml-formatter com a opçao \"xml to json\" e manter o arquivo com a extensao .xmlcfe.json, inves de apenas json (utilizado pros rpas)");
                 Console.WriteLine("===================================== renanmalagutti.dev@gmail.com ==========================================");
                 Console.ReadKey();
             }
@@ -49,6 +53,165 @@ namespace SATRpaToJson
             {
                 CriarInsertSqlFromJson(arquivoJson);
             }
+
+            foreach (var arquivoXml in jsonFromXmlsToCreateInsert)
+            {
+                CriarInsertFromXmlCfeSat(arquivoXml);
+            }
+        }
+
+        private static void CriarInsertFromXmlCfeSat(string arquivoJsonFromXml)
+        {
+            string formatString = "yyyyMMddHHmmss";
+
+            var jsonContentCfe = File.ReadAllText(arquivoJsonFromXml);
+            var cfeObjectJson = RootObjectCfeJson.FromJson(jsonContentCfe);
+            var listaDocumentosToGenerateInsert = new List<DocumentoCFe>();
+
+            foreach (var documentoCfe in cfeObjectJson.EnvCFe.LoteCFe.CFe)
+            {
+                var newDocument = new DocumentoCFe()
+                {
+                    DocumentoId = Guid.NewGuid(),
+                    ChaveConsulta = documentoCfe.InfCFe.Id,
+                    NumeroCFe = documentoCfe.InfCFe.Ide.NCFe,
+                    NumeroSerieEquipamentoSat = cfeObjectJson.EnvCFe.NserieSat,
+                    tpAmb = cfeObjectJson.EnvCFe.TpAmb,
+                    IdLote = cfeObjectJson.EnvCFe.IdLote,
+                    cNF = documentoCfe.InfCFe.Ide.CNf,
+                    EmitenteCNPJ = documentoCfe.InfCFe.Emit.Cnpj,
+                    EmitenteNome = documentoCfe.InfCFe.Emit.XNome.ToString(),
+                    ChaveInfCpl = documentoCfe.InfCFe.InfAdic.InfCpl.ToString(),
+                    NumeroCaixa = documentoCfe.InfCFe.Ide.NumeroCaixa,
+                    ValorTotal = Convert.ToDecimal(documentoCfe.InfCFe.Total.VCFe.Replace(".",",")),
+                    DataHoraEmissao = DateTime.ParseExact(documentoCfe.InfCFe.Ide.DEmi.ToString() + documentoCfe.InfCFe.Ide.HEmi.ToString().PadLeft(6,'0'), formatString, null),
+                    Itens = new List<DocumentoCFeItem>()
+                };
+
+                foreach (var itemDocumento in documentoCfe.InfCFe.Det.DetElementArray?.ToList() ?? new List<DetElement>() { documentoCfe.InfCFe.Det.DetElement })
+                {
+                    DocumentoCFeItem newItemDocumento = new DocumentoCFeItem()
+                    {
+                        NumeroItem = itemDocumento.NItem.ToString(),
+                        CFOP=itemDocumento.Prod.Cfop.ToString(),
+                        CodigoBarraMercadoria = itemDocumento.Prod.CEan,
+                        CodigoCadastroMercadoria = itemDocumento.Prod.CProd.ToString(),
+                        DescricaoMercadoria = itemDocumento.Prod.XProd,
+                        NCM = itemDocumento.Prod.Ncm.ToString(),
+                        ValorItem = Convert.ToDecimal(itemDocumento.Prod.VItem.Replace(".",",")),
+                        DocumentoId = newDocument.DocumentoId
+                    };
+                    newDocument.Itens.Add(newItemDocumento);
+                }
+                listaDocumentosToGenerateInsert.Add(newDocument);
+            }
+
+            GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoJsonFromXml);
+        }
+
+        private static void GerarArquivoSqlFromJsonXmlCFe(List<DocumentoCFe> listaDocumentosToGenerateInsert, string arquivoXml)
+        {
+            var createTablesSql = $@"set dateformat ymd;
+IF NOT EXISTS (
+    select * from sysobjects where name='DocumentoCFe' and xtype='U'
+) CREATE TABLE DocumentoCFe (
+    [DocumentoId] VARCHAR(MAX),
+    [ChaveConsulta] VARCHAR(MAX),
+    [NumeroCFe]  VARCHAR(MAX),
+    [IdLote]  VARCHAR(MAX),
+    [cNF]  VARCHAR(MAX),
+    [NumeroSerieEquipamentoSat]  VARCHAR(MAX),
+    [DataHoraEmissao] DATETIME,
+    [tpAmb]  VARCHAR(MAX),
+    [NumeroCaixa]  VARCHAR(MAX),
+    [EmitenteCNPJ]  VARCHAR(MAX),
+    [EmitenteNome]  VARCHAR(MAX),
+	[ValorTotal] DECIMAL(16, 3),
+    [ChaveInfCpl] VARCHAR(MAX),
+);
+
+IF NOT EXISTS (
+    select * from sysobjects where name='DocumentoCFeItem' and xtype='U'
+) CREATE TABLE DocumentoCFeItem (
+	[CodigoCadastroMercadoria] VARCHAR(MAX),
+    [CodigoBarraMercadoria] VARCHAR(MAX),
+    [DescricaoMercadoria] VARCHAR(MAX),
+    [NCM] VARCHAR(MAX),
+    [CFOP] VARCHAR(MAX),
+    [ValorItem] DECIMAL(16, 3),
+    [NumeroItem] VARCHAR(MAX),
+    [DocumentoId] VARCHAR(MAX)
+);
+
+";
+
+            var outputFilename = GetFullFilenameWithNewExtension(arquivoXml, "sql");
+            using(StreamWriter sw = new StreamWriter(outputFilename))
+            {
+                sw.WriteLine(createTablesSql);
+
+                foreach (var documento in listaDocumentosToGenerateInsert)
+                {
+                    string sqlInsertDocumento = $@"INSERT INTO [dbo].[DocumentoCFe]
+           ([DocumentoId]
+           ,[ChaveConsulta]
+           ,[NumeroCFe]
+           ,[IdLote]
+           ,[cNF]
+           ,[NumeroSerieEquipamentoSat]
+           ,[DataHoraEmissao]
+           ,[tpAmb]
+           ,[NumeroCaixa]
+           ,[EmitenteCNPJ]
+           ,[EmitenteNome]
+           ,[ValorTotal]
+           ,[ChaveInfCpl])
+     VALUES
+           ('{documento.DocumentoId.ToString()}'
+           ,'{documento.ChaveConsulta}'
+           ,'{documento.NumeroCFe}'
+           ,'{documento.IdLote}'
+           ,'{documento.cNF}'
+           ,'{documento.NumeroSerieEquipamentoSat}'
+           ,'{documento.DataHoraEmissao.ToString("yyyy-MM-dd HH:mm:ss")}'
+           ,'{documento.tpAmb}'
+           ,'{documento.NumeroCaixa}'
+           ,'{documento.EmitenteCNPJ}'
+           ,'{documento.EmitenteNome}'
+           ,{documento.ValorTotal.ToString("0.00", CultureInfo.InvariantCulture)}
+           ,'{documento.ChaveInfCpl}');";
+                    sw.WriteLine(sqlInsertDocumento);
+
+                    foreach (var itemCfe in documento.Itens)
+                    {
+                        string sqlInsertItem = $@"INSERT INTO [dbo].[DocumentoCFeItem]
+           ([CodigoCadastroMercadoria]
+           ,[CodigoBarraMercadoria]
+           ,[DescricaoMercadoria]
+           ,[NCM]
+           ,[CFOP]
+           ,[ValorItem]
+           ,[NumeroItem]
+           ,[DocumentoId])
+     VALUES
+           ('{itemCfe.CodigoCadastroMercadoria}'
+           ,'{itemCfe.CodigoBarraMercadoria}'
+           ,'{itemCfe.DescricaoMercadoria}'
+           ,'{itemCfe.NCM}'
+           ,'{itemCfe.CFOP}'
+           ,{itemCfe.ValorItem.ToString("0.00",CultureInfo.InvariantCulture)}
+           ,'{itemCfe.NumeroItem}'
+           ,'{itemCfe.DocumentoId}');";
+                        sw.WriteLine(sqlInsertItem);
+                    }
+
+                }
+
+            }
+
+            
+
+
         }
 
         private static void CriarInsertSqlFromJson( string arquivoJson)
