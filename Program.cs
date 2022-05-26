@@ -24,7 +24,7 @@ namespace SATRpaToJson
             var jsonFromXmlsToCreateInsert = args.Where(x => x.EndsWith(".xmlcfe.json"));
             var xmlsCfeToCreateInsert = args.Where(x => x.EndsWith(".xml")).OrderBy(x => x).ToList();
 
-            //xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\cfecanc353220308005625843759 (1).xml" };
+            //xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\313288\sub-analises\indico\XML_SEFAZ\19052022-24052022\351220520005880851359.xml" };
 
             if (args.Length == 0)
             {
@@ -138,44 +138,45 @@ namespace SATRpaToJson
             }
         }
 
+
         private static void BuildListaDocsInsertCFe(List<DocumentoCFe> listaDocumentosToGenerateInsert, string formatString, string textXml)
         {
-            var xmlDataCFe = textXml.DeserializeXML<XmlParserModel.EnvCFe>();
+            var xmlDataCFe = textXml.DeserializeXML<XmlParserModel.FromVS.envCFe>();
 
-            foreach (var documentoCfe in xmlDataCFe.LoteCFe.CFe)
+            foreach (var documentoCfe in xmlDataCFe.LoteCFe)
             {
-                Console.WriteLine("BuildListaDocsInsertCFe documento " + documentoCfe.InfCFe.Id);
+                Console.WriteLine("BuildListaDocsInsertCFe documento " + documentoCfe.infCFe.Id);
 
                 var newDocument = new DocumentoCFe()
                 {
                     DocumentoId = Guid.NewGuid(),
-                    ChaveConsulta = documentoCfe.InfCFe.Id,
-                    NumeroCFe = documentoCfe.InfCFe.Ide.NCFe,
-                    NumeroSerieEquipamentoSat = xmlDataCFe.NserieSAT,
-                    tpAmb = Convert.ToInt64(xmlDataCFe.TpAmb),
-                    IdLote = xmlDataCFe.IdLote,
+                    ChaveConsulta = documentoCfe.infCFe.Id,
+                    NumeroCFe = documentoCfe.infCFe.ide.nCFe.ToString(),
+                    NumeroSerieEquipamentoSat = xmlDataCFe.nserieSAT.ToString(),
+                    tpAmb = Convert.ToInt64(xmlDataCFe.tpAmb),
+                    IdLote = xmlDataCFe.idLote.ToString(),
                     //cNF = cfeContentFromXml.c.CNf,
-                    EmitenteCNPJ = documentoCfe.InfCFe.Emit.CNPJ,
-                    EmitenteNome = documentoCfe.InfCFe.Emit.XNome.ToString(),
-                    ChaveInfCpl = documentoCfe.InfCFe.InfAdic?.InfCpl?.ToString(),
-                    NumeroCaixa = documentoCfe.InfCFe.Ide.NumeroCaixa,
-                    ValorTotal = Convert.ToDecimal(documentoCfe.InfCFe?.Total?.VCFe.Replace(".", ",") ?? "0"),
-                    DataHoraEmissao = DateTime.ParseExact(documentoCfe.InfCFe.Ide.DEmi.ToString() + documentoCfe.InfCFe.Ide.HEmi.ToString().PadLeft(6, '0'), formatString, null),
+                    EmitenteCNPJ = documentoCfe.infCFe.emit.CNPJ.ToString(),
+                    EmitenteNome = documentoCfe.infCFe.emit.xNome.ToString(),
+                    ChaveInfCpl = documentoCfe.infCFe.infAdic?.infCpl?.ToString(),
+                    NumeroCaixa = documentoCfe.infCFe.ide.numeroCaixa.ToString(),
+                    ValorTotal = Convert.ToDecimal(documentoCfe.infCFe?.total?.vCFe.ToString().Replace(".", ",") ?? "0"),
+                    DataHoraEmissao = DateTime.ParseExact(documentoCfe.infCFe.ide.dEmi.ToString() + documentoCfe.infCFe.ide.hEmi.ToString().PadLeft(6, '0'), formatString, null),
                     Itens = new List<DocumentoCFeItem>(),
                     CupomDeCancelamento=false
                 };
 
-                foreach (var itemDocumento in documentoCfe.InfCFe.Det.ToList())
+                foreach (var itemDocumento in documentoCfe.infCFe.det.ToList())
                 {
                     DocumentoCFeItem newItemDocumento = new DocumentoCFeItem()
                     {
-                        NumeroItem = itemDocumento.NItem,
-                        CFOP = itemDocumento.Prod.CFOP,
+                        NumeroItem = itemDocumento.nItem.ToString(),
+                        CFOP = itemDocumento.prod.CFOP.ToString(),
                         //CodigoBarraMercadoria = itemDocumento.Prod.,
-                        CodigoCadastroMercadoria = itemDocumento.Prod.CProd.ToString(),
-                        DescricaoMercadoria = itemDocumento.Prod.XProd,
-                        NCM = itemDocumento.Prod.NCM,
-                        ValorItem = Convert.ToDecimal(itemDocumento.Prod.VItem.Replace(".", ",")),
+                        CodigoCadastroMercadoria = itemDocumento.prod.cProd.ToString(),
+                        DescricaoMercadoria = itemDocumento.prod.xProd,
+                        NCM = itemDocumento.prod.NCM.ToString(),
+                        ValorItem = Convert.ToDecimal(itemDocumento.prod.vItem.ToString().Replace(".", ",")),
                         DocumentoId = newDocument.DocumentoId
                     };
                     newDocument.Itens.Add(newItemDocumento);
