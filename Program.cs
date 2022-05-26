@@ -69,6 +69,7 @@ namespace SATRpaToJson
                 CriarInsertFromXmlCfeSat(arquivoXmlEnvCFe);
             }
 
+            Console.WriteLine("Processamento de documentos concluído, você pode fechar esta janela.");
             Console.ReadKey();
         }
 
