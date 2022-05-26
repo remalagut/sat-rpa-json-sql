@@ -196,20 +196,23 @@ IF NOT EXISTS (
 ) CREATE TABLE DocumentoCFe (
     [DocumentoId] VARCHAR(MAX),
     [ChaveConsulta] VARCHAR(MAX),
-    [NumeroCFe]  VARCHAR(MAX),
+    [NumeroCFe]  VARCHAR(MAX) NOT NULL,
     [IdLote]  VARCHAR(MAX),
     [cNF]  VARCHAR(MAX),
     [NumeroSerieEquipamentoSat]  VARCHAR(MAX),
     [DataHoraEmissao] DATETIME,
     [tpAmb]  VARCHAR(MAX),
     [NumeroCaixa]  VARCHAR(MAX),
-    [EmitenteCNPJ]  VARCHAR(MAX),
+    [EmitenteCNPJ]  VARCHAR(MAX) NOT NULL,
     [EmitenteNome]  VARCHAR(MAX),
 	[ValorTotal] DECIMAL(16, 3),
     [ChaveInfCpl] VARCHAR(MAX),
     [ChaveCFeCancelado] VARCHAR(MAX) DEFAULT NULL,
 	[CupomDeCancelamento] bit default(0)
 );
+
+IF NOT EXISTS(SELECT * FROM sysobjects WHERE name = 'UQ_EMPRESA_DOCUMENTO' AND type='K') ALTER TABLE DocumentoCFe
+  ADD CONSTRAINT UQ_EMPRESA_DOCUMENTO UNIQUE(EmitenteCNPJ, NumeroCFe);
 
 IF NOT EXISTS (
     select * from sysobjects where name='DocumentoCFeItem' and xtype='U'
@@ -233,7 +236,10 @@ IF NOT EXISTS (
 
                 foreach (var documento in listaDocumentosToGenerateInsert)
                 {
-                    string sqlInsertDocumento = $@"INSERT INTO [dbo].[DocumentoCFe]
+                    string sqlInsertDocumento = $@"
+IF NOT EXISTS (SELECT * FROM DocumentoCFe WHERE EmitenteCNPJ='{documento.EmitenteCNPJ}' AND NumeroCFe='{documento.NumeroCFe}')
+BEGIN
+INSERT INTO [dbo].[DocumentoCFe]
            ([DocumentoId]
            ,[ChaveConsulta]
            ,[NumeroCFe]
@@ -264,7 +270,8 @@ IF NOT EXISTS (
            ,{documento.ValorTotal.ToString("0.00", CultureInfo.InvariantCulture)}
            ,'{documento.ChaveInfCpl}'
            ,'{documento.ChaveCancelado}'
-           ,{(documento.CupomDeCancelamento ? "1" : "0") });";
+           ,{(documento.CupomDeCancelamento ? "1" : "0") });
+END;";
                     sw.WriteLine(sqlInsertDocumento);
 
                     foreach (var itemCfe in documento.Itens)
