@@ -16,11 +16,11 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFe
     {
 
-        private byte tpAmbField;
+        private string tpAmbField;
 
         private string idLoteField;
 
-        private byte cUFField;
+        private string cUFField;
 
         private envCFeCFe[] loteCFeField;
 
@@ -33,7 +33,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         private decimal versaoField;
 
         /// <remarks/>
-        public byte tpAmb
+        public string tpAmb
         {
             get
             {
@@ -59,7 +59,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte cUF
+        public string cUF
         {
             get
             {
@@ -378,11 +378,11 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeIde
     {
 
-        private byte cUFField;
+        private string cUFField;
 
         private string cNFField;
 
-        private byte modField;
+        private string modField;
 
         private string nserieSATField;
 
@@ -392,9 +392,9 @@ namespace SATRpaToJson.XmlParserModel.FromVS
 
         private string hEmiField;
 
-        private byte cDVField;
+        private string cDVField;
 
-        private byte tpAmbField;
+        private string tpAmbField;
 
         private ulong cNPJField;
 
@@ -402,10 +402,10 @@ namespace SATRpaToJson.XmlParserModel.FromVS
 
         private string assinaturaQRCODEField;
 
-        private byte numeroCaixaField;
+        private string numeroCaixaField;
 
         /// <remarks/>
-        public byte cUF
+        public string cUF
         {
             get
             {
@@ -431,7 +431,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte mod
+        public string mod
         {
             get
             {
@@ -496,7 +496,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte cDV
+        public string cDV
         {
             get
             {
@@ -509,7 +509,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte tpAmb
+        public string tpAmb
         {
             get
             {
@@ -561,7 +561,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte numeroCaixa
+        public string numeroCaixa
         {
             get
             {
@@ -589,9 +589,9 @@ namespace SATRpaToJson.XmlParserModel.FromVS
 
         private ulong ieField;
 
-        private byte imField;
+        private string imField;
 
-        private byte cRegTribField;
+        private string cRegTribField;
 
         private string indRatISSQNField;
 
@@ -648,7 +648,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte IM
+        public string IM
         {
             get
             {
@@ -661,7 +661,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte cRegTrib
+        public string cRegTrib
         {
             get
             {
@@ -834,7 +834,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
 
         private envCFeCFeInfCFeDetImposto impostoField;
 
-        private byte nItemField;
+        private string nItemField;
 
         /// <remarks/>
         public envCFeCFeInfCFeDetProd prod
@@ -864,7 +864,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public byte nItem
+        public string nItem
         {
             get
             {
@@ -1264,16 +1264,16 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeDetImpostoICMSICMS00
     {
 
-        private byte origField;
+        private string origField;
 
-        private byte cSTField;
+        private string cSTField;
 
         private decimal pICMSField;
 
         private decimal vICMSField;
 
         /// <remarks/>
-        public byte Orig
+        public string Orig
         {
             get
             {
@@ -1286,7 +1286,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte CST
+        public string CST
         {
             get
             {
@@ -1332,12 +1332,12 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeDetImpostoICMSICMS40
     {
 
-        private byte origField;
+        private string origField;
 
-        private byte cSTField;
+        private string cSTField;
 
         /// <remarks/>
-        public byte Orig
+        public string Orig
         {
             get
             {
@@ -1350,7 +1350,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         }
 
         /// <remarks/>
-        public byte CST
+        public string CST
         {
             get
             {
@@ -1408,7 +1408,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeDetImpostoPISPISAliq
     {
 
-        private byte cSTField;
+        private string cSTField;
 
         private decimal vBCField;
 
@@ -1417,7 +1417,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         private decimal vPISField;
 
         /// <remarks/>
-        public byte CST
+        public string CST
         {
             get
             {
@@ -1476,10 +1476,10 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeDetImpostoPISPISNT
     {
 
-        private byte cSTField;
+        private string cSTField;
 
         /// <remarks/>
-        public byte CST
+        public string CST
         {
             get
             {
@@ -1537,7 +1537,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeDetImpostoCOFINSCOFINSAliq
     {
 
-        private byte cSTField;
+        private string cSTField;
 
         private decimal vBCField;
 
@@ -1546,7 +1546,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         private decimal vCOFINSField;
 
         /// <remarks/>
-        public byte CST
+        public string CST
         {
             get
             {
@@ -1605,10 +1605,10 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFeDetImpostoCOFINSCOFINSNT
     {
 
-        private byte cSTField;
+        private string cSTField;
 
         /// <remarks/>
-        public byte CST
+        public string CST
         {
             get
             {
@@ -1832,7 +1832,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
     public partial class envCFeCFeInfCFePgtoMP
     {
 
-        private byte cMPField;
+        private string cMPField;
 
         private decimal vMPField;
 
@@ -1841,7 +1841,7 @@ namespace SATRpaToJson.XmlParserModel.FromVS
         private bool cAdmCFieldSpecified;
 
         /// <remarks/>
-        public byte cMP
+        public string cMP
         {
             get
             {
