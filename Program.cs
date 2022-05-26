@@ -24,7 +24,7 @@ namespace SATRpaToJson
             var jsonFromXmlsToCreateInsert = args.Where(x => x.EndsWith(".xmlcfe.json"));
             var xmlsCfeToCreateInsert = args.Where(x => x.EndsWith(".xml")).OrderBy(x => x).ToList();
 
-            //xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\313288\sub-analises\novo luz\XML_SEFAZ\24052022\350220524005894627880.xml" };
+            //xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\cfecanc353220308005625843759 (1).xml" };
 
             if (args.Length == 0)
             {
@@ -244,7 +244,9 @@ IF NOT EXISTS (
            ,[EmitenteCNPJ]
            ,[EmitenteNome]
            ,[ValorTotal]
-           ,[ChaveInfCpl])
+           ,[ChaveInfCpl]
+           ,[ChaveCFeCancelado]
+           ,[CupomDeCancelamento])
      VALUES
            ('{documento.DocumentoId.ToString()}'
            ,'{documento.ChaveConsulta}'
@@ -258,7 +260,9 @@ IF NOT EXISTS (
            ,'{documento.EmitenteCNPJ}'
            ,'{documento.EmitenteNome}'
            ,{documento.ValorTotal.ToString("0.00", CultureInfo.InvariantCulture)}
-           ,'{documento.ChaveInfCpl}');";
+           ,'{documento.ChaveInfCpl}'
+           ,'{documento.ChaveCancelado}'
+           ,{(documento.CupomDeCancelamento ? "1" : "0") });";
                     sw.WriteLine(sqlInsertDocumento);
 
                     foreach (var itemCfe in documento.Itens)
