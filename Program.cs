@@ -19,12 +19,25 @@ namespace SATRpaToJson
     {
         static void Main(string[] args)
         {
+            //(RPA) csvs rpa baixados do SGR para converter para json (upado e baixado como csv do google docs)
             var csvsToConvert = args.Where(x => x.EndsWith(".csv"));
+            
+            //(RPA) jsons criados do rpa acima (csv) para posteriormente converter em sql
             var jsonsToCreateInsert = args.Where(x => x.EndsWith(".json") && !x.Contains("xmlcfe"));
+            
+            // (RPA) json dos json convertido do csv acima
             var jsonFromXmlsToCreateInsert = args.Where(x => x.EndsWith(".xmlcfe.json"));
+
+            //(CFe) xmls dos documentos baixados do sgr para converter diretamente sql
             var xmlsCfeToCreateInsert = args.Where(x => x.EndsWith(".xml")).OrderBy(x => x).ToList();
 
+            //arquivo de download de lote via web service, formato de cada linha:
+            //nSerieSat=000945311|dhInicial=15052022000000|dhFinal=31052022004400|chaveSegurancaSat=fff02796-29e4-4855-b152-7e0b136d4631
+            var arquivosLoteDownloadSatWS = args.Where(x => x.EndsWith(".wssatdownload"));
+
+
             //xmlsCfeToCreateInsert = new List<string>() { @"C:\transient\313288\sub-analises\indico\XML_SEFAZ\19052022-24052022\351220520005880851359.xml" };
+            arquivosLoteDownloadSatWS = new List<string>() { @"C:\transient\fast-tests\LotesParaBaixar.wssatdownload" };
 
             if (args.Length == 0)
             {
@@ -64,16 +77,31 @@ namespace SATRpaToJson
                 CriarInsertFromXmlCfeSat(arquivoJsonFromXml);
             }
 
-            foreach (var arquivoXmlEnvCFe in xmlsCfeToCreateInsert)
+            using (StreamWriter sw = new StreamWriter(Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString() + ".sql")))
             {
-                CriarInsertFromXmlCfeSat(arquivoXmlEnvCFe);
+                foreach (var arquivoXmlEnvCFe in xmlsCfeToCreateInsert)
+                {
+                    var outputSqlFile = CriarInsertFromXmlCfeSat(arquivoXmlEnvCFe);
+                    sw.WriteLine(":r \"" + outputSqlFile + "\"");
+                }
             }
+
+            foreach (var arquivoDownloadSatWS in arquivosLoteDownloadSatWS)
+            {
+                BaixarLotesSatWS(arquivoDownloadSatWS);
+            }
+            
 
             Console.WriteLine("Processamento de documentos concluído, você pode fechar esta janela.");
             Console.ReadKey();
         }
 
-        private static void CriarInsertFromXmlCfeSat(string arquivoXmlCFe)
+        private static void BaixarLotesSatWS(string arquivoDownloadSatWS)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static string CriarInsertFromXmlCfeSat(string arquivoXmlCFe)
         {
             Console.WriteLine("CriarInsertFromXmlCfeSat " + arquivoXmlCFe);
             var listaDocumentosToGenerateInsert = new List<DocumentoCFe>();
@@ -88,7 +116,7 @@ namespace SATRpaToJson
             {
                 BuildListaDocsInsertCFeCanc(listaDocumentosToGenerateInsert, formatString, textXml);
             }
-            GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
+            return GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
         }
 
         private static void BuildListaDocsInsertCFeCanc(List<DocumentoCFe> listaDocumentosToGenerateInsert, string formatString, string textXml)
@@ -188,7 +216,7 @@ namespace SATRpaToJson
         //GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
         //}
 
-        private static void GerarArquivoSqlFromJsonXmlCFe(List<DocumentoCFe> listaDocumentosToGenerateInsert, string arquivoXml)
+        private static string GerarArquivoSqlFromJsonXmlCFe(List<DocumentoCFe> listaDocumentosToGenerateInsert, string arquivoXml)
         {
             var createTablesSql = $@"set dateformat ymd;
 IF NOT EXISTS (
@@ -302,6 +330,7 @@ END;";
             }
 
             Console.WriteLine("Concluída geração de sql " + outputFilename);
+            return outputFilename;
         }
 
         private static void CriarInsertSqlFromJson(string arquivoJson)

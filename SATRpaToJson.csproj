@@ -38,6 +38,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,19 +48,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\XmlExtensions.cs" />
+    <Compile Include="Model\SATDownloadWS\CFeConsultaLotes.cs" />
     <Compile Include="Model\SqlOutput\DocumentoCFe.cs" />
     <Compile Include="Model\DadosRPA.cs" />
     <Compile Include="Model\SqlOutput\DocumentoCFeItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XmlParserCodeBeautify\JsonModelCodeBeautify.cs" />
-    <Compile Include="XmlParserModel\XmlModelVS.cs" />
-    <Compile Include="XmlParserModel\XmlSharpCFeCancModel.cs" />
-    <Compile Include="XmlParserModel\XmlSharpCfeSatModels.cs" />
+    <Compile Include="Model\JsonParserModelCodeBeautify\JsonModelCodeBeautify.cs" />
+    <Compile Include="Model\XmlParserModel\XmlModelVS.cs" />
+    <Compile Include="Model\XmlParserModel\XmlSharpCFeCancModel.cs" />
+    <Compile Include="Model\XmlParserModel\XmlSharpCfeSatModels.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
