@@ -23,7 +23,7 @@ namespace SATRpaToJson.Model.ConsultaLoteWS
         private Signature signatureField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("infContribuinte")]
+        [System.Xml.Serialization.XmlElementAttribute( IsNullable = true, ElementName ="infContribuinte")]
         public resLoteInfContribstringe infContribstringe
         {
             get
@@ -37,7 +37,7 @@ namespace SATRpaToJson.Model.ConsultaLoteWS
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute( "Lote")]
+        [System.Xml.Serialization.XmlElementAttribute( IsNullable = true, ElementName ="Lote")]
         public resLoteLote[] Lote
         {
             get
@@ -51,7 +51,7 @@ namespace SATRpaToJson.Model.ConsultaLoteWS
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute(Namespace = "http://www.w3.org/2000/09/xmldsig#")]
+        [System.Xml.Serialization.XmlElementAttribute( IsNullable = true,Namespace = "http://www.w3.org/2000/09/xmldsig#")]
         public Signature Signature
         {
             get

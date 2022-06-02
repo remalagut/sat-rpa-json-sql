@@ -27,10 +27,10 @@ namespace SATRpaToJson
         {
             //(RPA) csvs rpa baixados do SGR para converter para json (upado e baixado como csv do google docs)
             var csvsToConvert = args.Where(x => x.EndsWith(".csv"));
-            
+
             //(RPA) jsons criados do rpa acima (csv) para posteriormente converter em sql
             var jsonsToCreateInsert = args.Where(x => x.EndsWith(".json") && !x.Contains("xmlcfe"));
-            
+
             // (RPA) json dos json convertido do csv acima
             var jsonFromXmlsToCreateInsert = args.Where(x => x.EndsWith(".xmlcfe.json"));
 
@@ -94,33 +94,34 @@ namespace SATRpaToJson
                 ProcessarArquivoXml(arquivoJsonFromXml);
             }
 
-            if(xmlsCfeToCreateInsert.Count > 0)
-            using (StreamWriter sw = new StreamWriter(Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString() + ".sql")))
-            {
-                foreach (var arquivoXmlEnvCFe in xmlsCfeToCreateInsert)
+            if (xmlsCfeToCreateInsert.Count > 0)
+                using (StreamWriter sw = new StreamWriter(Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString() + ".sql")))
                 {
-                    var outputSqlFile = ProcessarArquivoXml(arquivoXmlEnvCFe);
-                    sw.WriteLine(":r \"" + outputSqlFile + "\"");
+                    foreach (var arquivoXmlEnvCFe in xmlsCfeToCreateInsert)
+                    {
+                        var outputSqlFile = ProcessarArquivoXml(arquivoXmlEnvCFe);
+                        sw.WriteLine(":r \"" + outputSqlFile + "\"");
+                    }
                 }
-            }
 
             //realiza apenas o download, a conversão é feita carregando o xml baixado no exe do programa
             foreach (var arquivoDownloadSatWS in arquivosLoteDownloadSatWS)
             {
+                System.Threading.Thread.Sleep(2000);
                 var listaArquivosLoadXml = BaixarXmlsConsultaLoteWSSat(arquivoDownloadSatWS);
                 //BuildListaDocumentosFromXmlConsultaLoteWS(satXmlString, listaDocumentosToGenerateInsert, formatString, textXml);
             }
 
-            if(arquivosSqlToCreateCompiledExecutionCmd.Count() > 0)
-            using (StreamWriter sw = new StreamWriter(Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString() + ".sql")))
-            {
-                foreach (var arquivoSql in arquivosSqlToCreateCompiledExecutionCmd)
+            if (arquivosSqlToCreateCompiledExecutionCmd.Count() > 0)
+                using (StreamWriter sw = new StreamWriter(Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString() + ".sql")))
                 {
-                    sw.WriteLine(":r \"" + arquivoSql + "\"");
+                    foreach (var arquivoSql in arquivosSqlToCreateCompiledExecutionCmd)
+                    {
+                        sw.WriteLine(":r \"" + arquivoSql + "\"");
+                    }
                 }
-            }
-                
-            
+
+
 
             Console.WriteLine("Processamento de documentos concluído, você pode fechar esta janela.");
             Console.ReadKey();
@@ -130,7 +131,7 @@ namespace SATRpaToJson
         {
             //var xmlDataCFe = textXml.DeserializeXML<XmlParserModel.FromVS.envCFe>();
             var listaDocumentosToGenerateInsert = new List<DocumentoCFe>();
-            
+
             foreach (var rawXmlContentLote in listaXmlsToParse)
             {
                 var newDocsFromXml = BuildListaDocsInsertFromRawXmlConsultaLote(rawXmlContentLote);
@@ -152,8 +153,8 @@ namespace SATRpaToJson
                 foreach (var documento in lote.InfCfe)
                 {
                     var dataHoraDoc = documento.dEmi + documento.hEmi?.PadLeft(6, '0');
-                    if(String.IsNullOrEmpty(dataHoraDoc))
-                       dataHoraDoc = lote.dhProcessamento;
+                    if (String.IsNullOrEmpty(dataHoraDoc))
+                        dataHoraDoc = lote.dhProcessamento;
 
                     var newDocument = new DocumentoCFe()
                     {
@@ -162,7 +163,7 @@ namespace SATRpaToJson
                         NumeroCFe = documento.nCupom,
                         NumeroSerieEquipamentoSat = "Importado download lote web service",
                         tpAmb = 0,
-                        IdLote = "NRec="+lote.NRec,
+                        IdLote = "NRec=" + lote.NRec,
                         //cNF = cfeContentFromXml.c.CNf,
                         EmitenteCNPJ = xmlDataCFe.infContribstringe?.CNPJ,
                         EmitenteNome = xmlDataCFe.infContribstringe?.xNome,
@@ -195,7 +196,7 @@ namespace SATRpaToJson
             //verifica se existe diretorio para o arquivo de input (um arquivo = um diretorio na pasta de execuçao)
             //diretorio utilizado para armazenar os download de xmls consulta lote ws
             string outputFolderPath = Path.Combine(Environment.CurrentDirectory, Path.GetFileNameWithoutExtension(pathArquivoInputConfigDownloadLotes + "-" + Guid.NewGuid()));
-            
+
             if (!Directory.Exists(Path.GetFullPath(outputFolderPath)))
             {
                 Directory.CreateDirectory(outputFolderPath);
@@ -267,26 +268,26 @@ namespace SATRpaToJson
 
                 client.Endpoint.Binding = newBinding;
             }
-         
+
             CfeCabecMsgSoapEntity cabecalhoEnvio = new CfeCabecMsgSoapEntity();
             cabecalhoEnvio.cUF = "35";
             cabecalhoEnvio.versaoDados = "0.08";
             var consultaLoteBody = $"<consLote xmlns=\"http://www.fazenda.sp.gov.br/sat\" versao=\"0.08\"><nserieSAT>{nserieSAT}</nserieSAT><dhInicial>{dhInicial}</dhInicial><dhFinal>{dhFinal}</dhFinal><chaveSeguranca>{chaveSeguranca}</chaveSeguranca></consLote>";
+            System.Threading.Thread.Sleep(1000);
             Console.WriteLine("Disparando consulta de lote WS sat:");
             Console.WriteLine(consultaLoteBody);
             try
             {
-                Task.Delay(1500);
-                var result = client.ConsultarLotesEnviadosAsync(cabecalhoEnvio, consultaLoteBody).Result;
+                var result = client.ConsultarLotesEnviados(ref cabecalhoEnvio, consultaLoteBody);
 
-                return result.CfeConsultarLotesResult;
+                return result;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message + "\n" + ex.InnerException + "\n" + ex.StackTrace);
                 return null;
             }
-            
+
             //var result = CreateSoapEnvelope().Result;
         }
 
@@ -312,8 +313,10 @@ namespace SATRpaToJson
             //xml resposta consulta lote WS
             if (textXml.EndsWith("</resLote>"))
             {
-
-                listaDocumentosToGenerateInsert.AddRange(BuildListaDocsInsertFromRawXmlConsultaLote(textXml));
+                if (!textXml.Contains("<Mensagem>Não existem dados para os parâmetros de busca informados.</Mensagem>"))
+                    listaDocumentosToGenerateInsert.AddRange(BuildListaDocsInsertFromRawXmlConsultaLote(textXml));
+                else
+                    Console.WriteLine("Retorno xml sefaz: <Mensagem>Não existem dados para os parâmetros de busca informados.</Mensagem> ignorando arquivo " + arquivoXmlCFe);
                 //GerarArquivoSqlFromJsonXmlCFe(listaDocumentosToGenerateInsert, arquivoXmlCFe);
             }
 
@@ -345,8 +348,8 @@ namespace SATRpaToJson
                     ValorTotal = Convert.ToDecimal(documentoCfe.InfCFe?.Total?.VCFe.Replace(".", ",") ?? "0"),
                     DataHoraEmissao = DateTime.ParseExact(documentoCfe.InfCFe.Ide.DEmi.ToString() + documentoCfe.InfCFe.Ide.HEmi.ToString().PadLeft(6, '0'), formatString, null),
                     Itens = new List<DocumentoCFeItem>(),
-                    CupomDeCancelamento= true,
-                    ChaveCancelado=documentoCfe.InfCFe.ChCanc
+                    CupomDeCancelamento = true,
+                    ChaveCancelado = documentoCfe.InfCFe.ChCanc
                 };
 
                 //foreach (var itemDocumento in documentoCfe.InfCFe.Det.ToList())
@@ -393,7 +396,7 @@ namespace SATRpaToJson
                     ValorTotal = Convert.ToDecimal(documentoCfe.infCFe?.total?.vCFe.ToString().Replace(".", ",") ?? "0"),
                     DataHoraEmissao = DateTime.ParseExact(documentoCfe.infCFe.ide.dEmi.ToString() + documentoCfe.infCFe.ide.hEmi.ToString().PadLeft(6, '0'), formatString, null),
                     Itens = new List<DocumentoCFeItem>(),
-                    CupomDeCancelamento=false
+                    CupomDeCancelamento = false
                 };
 
                 foreach (var itemDocumento in documentoCfe.infCFe.det.ToList())
