@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.fazenda.sp.gov.br/sat/wsdl/CfeConsultaLotes" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://www.fazenda.sp.gov.br/sat/wsdl/CfeConsultaLotes" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.fazenda.sp.gov.br/sat/wsdl/CfeConsultaLotes">
+      <s:element name="CfeConsultarLotes">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="cfeDadosMsg" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="CfeConsultarLotesResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CfeConsultarLotesResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="cfeCabecMsg" type="tns:CfeCabecMsgSoapEntity" />
+      <s:complexType name="CfeCabecMsgSoapEntity">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="cUF" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="versaoDados" type="s:string" />
+        </s:sequence>
+        <s:anyAttribute />
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="CfeConsultarLotesSoapIn">
+    <wsdl:part name="parameters" element="tns:CfeConsultarLotes" />
+  </wsdl:message>
+  <wsdl:message name="CfeConsultarLotesSoapOut">
+    <wsdl:part name="parameters" element="tns:CfeConsultarLotesResponse" />
+  </wsdl:message>
+  <wsdl:message name="CfeConsultarLotescfeCabecMsg">
+    <wsdl:part name="cfeCabecMsg" element="tns:cfeCabecMsg" />
+  </wsdl:message>
+  <wsdl:portType name="CfeConsultaLotesSoap">
+    <wsdl:operation name="ConsultarLotesEnviados">
+      <wsdl:input name="CfeConsultarLotes" message="tns:CfeConsultarLotesSoapIn" />
+      <wsdl:output name="CfeConsultarLotes" message="tns:CfeConsultarLotesSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CfeConsultaLotesSoap" type="tns:CfeConsultaLotesSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarLotesEnviados">
+      <soap:operation soapAction="http://www.fazenda.sp.gov.br/sat/wsdl/CfeConsultar" style="document" />
+      <wsdl:input name="CfeConsultarLotes">
+        <soap:body use="literal" />
+        <soap:header message="tns:CfeConsultarLotescfeCabecMsg" part="cfeCabecMsg" use="literal" />
+      </wsdl:input>
+      <wsdl:output name="CfeConsultarLotes">
+        <soap:body use="literal" />
+        <soap:header message="tns:CfeConsultarLotescfeCabecMsg" part="cfeCabecMsg" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="CfeConsultaLotesSoap12" type="tns:CfeConsultaLotesSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ConsultarLotesEnviados">
+      <soap12:operation soapAction="http://www.fazenda.sp.gov.br/sat/wsdl/CfeConsultar" style="document" />
+      <wsdl:input name="CfeConsultarLotes">
+        <soap12:body use="literal" />
+        <soap12:header message="tns:CfeConsultarLotescfeCabecMsg" part="cfeCabecMsg" use="literal" />
+      </wsdl:input>
+      <wsdl:output name="CfeConsultarLotes">
+        <soap12:body use="literal" />
+        <soap12:header message="tns:CfeConsultarLotescfeCabecMsg" part="cfeCabecMsg" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CfeConsultaLotes">
+    <wsdl:port name="CfeConsultaLotesSoap" binding="tns:CfeConsultaLotesSoap">
+      <soap:address location="https://wssatsp.fazenda.sp.gov.br/CfeConsultarLotes/CfeConsultarLotes.asmx" />
+    </wsdl:port>
+    <wsdl:port name="CfeConsultaLotesSoap12" binding="tns:CfeConsultaLotesSoap12">
+      <soap12:address location="https://wssatsp.fazenda.sp.gov.br/CfeConsultarLotes/CfeConsultarLotes.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

@@ -8,10 +8,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>SATRpaToJson</RootNamespace>
     <AssemblyName>SATRpaToJson</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,6 +39,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -47,8 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connected Services\ConsultaLotesEnviadosWS\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
     <Compile Include="Extensions\XmlExtensions.cs" />
-    <Compile Include="Model\SATDownloadWS\CFeConsultaLotes.cs" />
+    <Compile Include="Model\ConsultaLoteWS\ResConsultaLoteWSModel.cs" />
     <Compile Include="Model\SqlOutput\DocumentoCFe.cs" />
     <Compile Include="Model\DadosRPA.cs" />
     <Compile Include="Model\SqlOutput\DocumentoCFeItem.cs" />
@@ -61,10 +70,32 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Connected Services\ConsultaLotesEnviadosWS\CfeConsultarLotes.wsdl" />
+    <None Include="Connected Services\ConsultaLotesEnviadosWS\SATRpaToJson.ConsultaLotesEnviadosWS.CfeCabecMsgSoapEntity.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
+    <None Include="Connected Services\ConsultaLotesEnviadosWS\SATRpaToJson.ConsultaLotesEnviadosWS.CfeConsultarLotes1.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Connected Services\ConsultaLotesEnviadosWS\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Connected Services\ConsultaLotesEnviadosWS\configuration91.svcinfo" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Connected Services\ConsultaLotesEnviadosWS\configuration.svcinfo" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Connected Services\ConsultaLotesEnviadosWS\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
